@@ -9,11 +9,11 @@ var AliMNS = require(Path.join(__dirname, "../index.js"));
 describe('AliMNS-main', function(){
     // ali account configuration
     var aliCfg = {
-        accountId: "your-account-id",
-        keyId: "your-key-id",
-        keySecret: "your-key-secret",
-        region: "hangzhou",
-        mqName: "dev"
+        accountId: "1937106107384200",
+        keyId: "kp74z938xM97OCnV",
+        keySecret: "WmMdAKOWdjm0dr5UHtssXFmNyjeqqC",
+        region: "shenzhen",
+        mqName: "test-alimns-mq"
     };
 
     // test/account.js contains sensitive data, and will not be tracked by git
