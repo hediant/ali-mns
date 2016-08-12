@@ -9,11 +9,11 @@ var AliMNS = require(Path.join(__dirname, "../index.js"));
 describe('AliMNS-main', function(){
     // ali account configuration
     var aliCfg = {
-        accountId: "1937106107384200",
-        keyId: "kp74z938xM97OCnV",
-        keySecret: "WmMdAKOWdjm0dr5UHtssXFmNyjeqqC",
-        region: "shenzhen",
-        mqName: "test-alimns-mq"
+        accountId: "your-account-id",
+        keyId: "your-key-id",
+        keySecret: "your-key-secret",
+        region: "hangzhou",
+        mqName: "dev"
     };
 
     // test/account.js contains sensitive data, and will not be tracked by git
@@ -22,6 +22,7 @@ describe('AliMNS-main', function(){
         aliCfg = require(cfgPath);
     }
     var account = new AliMNS.Account(aliCfg.accountId, aliCfg.keyId, aliCfg.keySecret);
+    account.setGA(false);
     var mns = new AliMNS.MNS(account, aliCfg.region);
     
     describe('Compatible', function(){
@@ -166,8 +167,10 @@ describe('AliMNS-main', function(){
                         
                         setImmediate(function (){
                             doneP(true).then(function (){
-                                console.log("delete message %s.", dataRecv);
-                            })
+                                console.log("delete message %s completed.", dataRecv.Message.MessageBody);
+                            }).catch(function (err){
+                                console.log("delete message %s error:%s.", dataRecv.Message.MessageBody, err.Error.Code);
+                            });
                         });
                     }, 5);
                 });
