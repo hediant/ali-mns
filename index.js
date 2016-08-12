@@ -329,12 +329,10 @@ var AliMNS;
                     try {
                         debug(dataRecv);
                         _this._timeoutCount = 0;
-                        if (cb(null, dataRecv)) {
-                            _this.deleteP(dataRecv)
-                                .done(null, function (ex) {
-                                console.log(ex);
-                            });
-                        }
+                        var doneP = function (ack){
+                            return ack ? _this.deleteP(dataRecv) : Promise.resolve(dataRecv);
+                        };
+                        cb(null, dataRecv, doneP);
                     }
                     catch (ex) {
                         // ignore any ex throw from cb
