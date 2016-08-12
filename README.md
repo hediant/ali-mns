@@ -67,7 +67,7 @@ mq.notifyRecv(function(err, message){
 });
 ```
 
-这段代码的问题在于, callback中用**return true**来表示是否删除消息, 如果对消息的处理过程是异步的, 我们将无法确保处理完成后再删除消息
+   这段代码的问题在于, callback中用**return true**来表示是否删除消息, 如果对消息的处理过程是异步的, 我们将无法确保处理完成后再删除消息.
 <br>
 修改后的notifyRecv原型如下:
 
