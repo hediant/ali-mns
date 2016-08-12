@@ -44,11 +44,11 @@ Please use 'gulp' to compile ts files into a single index.js file after download
 
 * npm
 
-[https://www.npmjs.com/package/ali-mns]
+https://www.npmjs.com/package/ali-mns
 
 * github
 
-[https://github.com/InCar/ali-mns]
+https://github.com/InCar/ali-mns
 
 # 改造说明
 
