@@ -22,6 +22,7 @@ describe('AliMNS-main', function(){
         aliCfg = require(cfgPath);
     }
     var account = new AliMNS.Account(aliCfg.accountId, aliCfg.keyId, aliCfg.keySecret);
+    account.setGA(false);
     var mns = new AliMNS.MNS(account, aliCfg.region);
     
     describe('Compatible', function(){
@@ -166,8 +167,10 @@ describe('AliMNS-main', function(){
                         
                         setImmediate(function (){
                             doneP(true).then(function (){
-                                console.log("delete message %s.", dataRecv);
-                            })
+                                console.log("delete message %s completed.", dataRecv.Message.MessageBody);
+                            }).catch(function (err){
+                                console.log("delete message %s error:%s.", dataRecv.Message.MessageBody, err.Error.Code);
+                            });
                         });
                     }, 5);
                 });
