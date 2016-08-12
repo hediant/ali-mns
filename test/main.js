@@ -147,7 +147,7 @@ describe('AliMNS-main', function(){
             Promise.all([mq.sendP("testA"), mq.sendP("testB"), mq.sendP("testC")])
             .then(function(){
                 return new Promise(function(resolve, reject){
-                    mq.notifyRecv(function(ex, dataRecv){
+                    mq.notifyRecv(function(ex, dataRecv, doneP){
                         notifyCount++;
                         if(ex) {
                             // console.info(ex);
@@ -164,7 +164,11 @@ describe('AliMNS-main', function(){
                             });
                         }
                         
-                        return true;
+                        setImmediate(function (){
+                            doneP(true).then(function (){
+                                console.log("delete message %s.", dataRecv);
+                            })
+                        });
                     }, 5);
                 });
             })
