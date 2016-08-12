@@ -54,5 +54,43 @@ https://github.com/InCar/ali-mns
 
 * 源库中mq.notifyRecv和batch.notifyRecv方法无法实现异步处理
 
+源库中notifyRecv的原型如下:
+
+```javascript
+mq.notifyRecv(function(err, message){
+    console.log(message);
+    if(err && err.message === "NetworkBroken"){
+        // Best to restart the process when this occurs 
+        throw err;
+    }
+    return true; // this will cause message to be deleted automatically 
+});
+```
+
+   这段代码的问题在于, callback中用**return true**来表示是否删除消息, 如果对消息的处理过程是异步的, 我们将无法确保处理完成后再删除消息.
+<br>
+修改后的notifyRecv原型如下:
+
+```javascript
+mq.notifyRecv(function(err, message, doneP){
+    console.log(message);
+    if(err && err.message === "NetworkBroken"){
+        // Best to restart the process when this occurs 
+        throw err;
+    }
+    
+    setImmediate(function (){
+    	// this will cause message to be deleted automatically 
+    	doneP(true).then(function (){
+    		// do something
+    		return null;
+    	}).catch(function (err){
+    		// handle delete message errors!
+    	})
+    });
+    
+});
+```
+
 # License
 MIT
