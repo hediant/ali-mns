@@ -13,6 +13,9 @@ module AliMNS{
             this._account = account;
             if(region) this._region = region;
 
+            // set internal url
+            this._internalUrl = this._account.isInternal() ? "-internal" : "";
+            
             // make url
             this._urlAttr = this.makeAttrURL();
             this._url = this.makeURL();
@@ -154,7 +157,7 @@ module AliMNS{
         }
 
         private makeAttrURL(){
-            return Util.format(this._pattern, this._account.getAccountId(), this._region, this._name);
+            return Util.format(this._pattern, this._account.getAccountId(), this._region, this._internalUrl, this._name);
         }
 
         private makeURL(){
@@ -170,6 +173,7 @@ module AliMNS{
         private _region = "hangzhou";
         private _account: Account;
         private _urlAttr: string; // mq attr url
-        private _pattern = "http://%s.mns.cn-%s.aliyuncs.com/queues/%s";
+        private _internalUrl = "";
+        private _pattern = "http://%s.mns.cn-%s%s.aliyuncs.com/queues/%s";
     }
 }
