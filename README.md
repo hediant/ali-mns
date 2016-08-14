@@ -92,5 +92,30 @@ mq.notifyRecv(function(err, message, doneP){
 });
 ```
 
+另一个问题是, 采用notifyRecv(callback)这种函数原型,在异步的情况下, 会导致callback重入的问题. <br>
+如果需要确保callback被多次调用的期间, 函数域之间是相互独立的, 需要使用闭包(closure)处理, 如下:
+
+```javascript
+mq.notifyRecv(function(err, message, doneP){
+    (function (err, message, doneP){
+        console.log(message);
+        if(err && err.message === "NetworkBroken"){
+            // Best to restart the process when this occurs 
+            throw err;
+        }
+        
+        setImmediate(function (){
+            // this will cause message to be deleted automatically 
+            doneP(true).then(function (){
+                // do something
+                return null;
+            }).catch(function (err){
+                // handle delete message errors!
+            })
+        });    
+    })(err, message, doneP);   
+});
+```
+
 # License
 MIT
