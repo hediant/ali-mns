@@ -151,7 +151,7 @@ describe('AliMNS-main', function(){
                     mq.notifyRecv(function(ex, dataRecv, doneP){
                         notifyCount++;
                         if(ex) {
-                            // console.info(ex);
+                            console.info(ex);
                         }
                         else {
                             notifyConfirmed++;
@@ -165,13 +165,15 @@ describe('AliMNS-main', function(){
                             });
                         }
                         
-                        setImmediate(function (){
-                            doneP(true).then(function (){
-                                console.log("delete message %s completed.", dataRecv.Message.MessageBody);
-                            }).catch(function (err){
-                                console.log("delete message %s error:%s.", dataRecv.Message.MessageBody, err.Error.Code);
+                        if (!ex){
+                            setImmediate(function (){
+                                doneP(true).then(function (){
+                                    console.log("delete message %s completed.", dataRecv.Message.MessageBody);
+                                }).catch(function (err){
+                                    console.log("delete message %s error:%s.", dataRecv.Message.MessageBody, err.Error.Code);
+                                });
                             });
-                        });
+                        }
                     }, 5);
                 });
             })
