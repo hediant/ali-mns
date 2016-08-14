@@ -1,4 +1,4 @@
-var gitVersion={"branch":"internal_url_support","rev":"121","hash":"381bba3","hash160":"381bba30e1126818ecc015706004a4c466d94d04"};
+var gitVersion={"branch":"internal_url_support","rev":"122","hash":"f1f9163","hash160":"f1f916321eeb6cd296b39edc251ec0175a465228"};
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -808,7 +808,7 @@ var AliMNS;
         function Topic(name, account, region) {
             this._region = "hangzhou";
             this._internalUrl = "";
-            this._pattern = "http://%s.mns.cn-%s%s.aliyuncs.com/queues/%s";
+            this._pattern = "http://%s.mns.cn-%s%s.aliyuncs.com/topics/%s";
             this._name = name;
             this._account = account;
             if (region)

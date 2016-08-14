@@ -108,6 +108,6 @@ module AliMNS{
         private _account: Account;
         private _urlAttr: string; // topic attr url
         private _internalUrl = "";
-        private _pattern = "http://%s.mns.cn-%s%s.aliyuncs.com/queues/%s";
+        private _pattern = "http://%s.mns.cn-%s%s.aliyuncs.com/topics/%s";
     }
 }
