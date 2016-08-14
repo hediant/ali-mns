@@ -117,5 +117,17 @@ mq.notifyRecv(function(err, message, doneP){
 });
 ```
 
+* 增加Ali-MNS内部访问支持
+
+```javascript
+    var AliMNS = require("ali-mns");
+    
+    // 第4个参数为true表示使用内部url(阿里云内网)访问
+    var account = new AliMNS.Account("<your-account-id>", "<your-key-id>", "<your-key-secret>", true);
+    var mq = new AliMNS.MQ("<your-mq-name>", account, "hangzhou");
+    // send message
+    mq.sendP("Hello ali-mns").then(console.log, console.error);
+```
+
 # License
 MIT
