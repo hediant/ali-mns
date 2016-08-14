@@ -1,4 +1,4 @@
-var gitVersion={"branch":"develop","rev":"118","hash":"811af87","hash160":"811af87e6b769f50d5e42a021567ee8b87a8c2ef"};
+var gitVersion={"branch":"internal_url_support","rev":"122","hash":"f1f9163","hash160":"f1f916321eeb6cd296b39edc251ec0175a465228"};
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -25,11 +25,13 @@ var AliMNS;
 (function (AliMNS) {
     // The Ali account, it holds the key id and secret.
     var Account = (function () {
-        function Account(accountId, keyId, keySecret) {
+        function Account(accountId, keyId, keySecret, isInternal) {
             this._bGoogleAnalytics = true; // Enable Google Analytics
+            this._isInternal = false; // use public url or internal url to access ali-yun
             this._accountId = accountId;
             this._keyId = keyId;
             this._keySecret = keySecret;
+            this._isInternal = isInternal;
         }
         Account.prototype.getAccountId = function () { return this._accountId; };
         Account.prototype.getOwnerId = function () { return this._accountId; }; // for compatible v1.x
@@ -46,6 +48,9 @@ var AliMNS;
             var md5HEX = cryptoMD5.update(text).digest("hex");
             var buf = new Buffer.Buffer(md5HEX, "utf8");
             return buf.toString("base64");
+        };
+        Account.prototype.isInternal = function () {
+            return this._isInternal;
         };
         return Account;
     }());
@@ -517,11 +522,14 @@ var AliMNS;
             this._notifyRecv = null;
             this._recvTolerance = 5; // 接收消息的容忍时间(单位:秒)
             this._region = "hangzhou";
-            this._pattern = "http://%s.mns.cn-%s.aliyuncs.com/queues/%s";
+            this._internalUrl = "";
+            this._pattern = "http://%s.mns.cn-%s%s.aliyuncs.com/queues/%s";
             this._name = name;
             this._account = account;
             if (region)
                 this._region = region;
+            // set internal url
+            this._internalUrl = this._account.isInternal() ? "-internal" : "";
             // make url
             this._urlAttr = this.makeAttrURL();
             this._url = this.makeURL();
@@ -648,7 +656,7 @@ var AliMNS;
             }
         };
         MQ.prototype.makeAttrURL = function () {
-            return Util.format(this._pattern, this._account.getAccountId(), this._region, this._name);
+            return Util.format(this._pattern, this._account.getAccountId(), this._region, this._internalUrl, this._name);
         };
         MQ.prototype.makeURL = function () {
             return this.makeAttrURL() + "/messages";
@@ -799,11 +807,14 @@ var AliMNS;
         // region can be "hangzhou", "beijing" or "qingdao", the default is "hangzhou"
         function Topic(name, account, region) {
             this._region = "hangzhou";
-            this._pattern = "http://%s.mns.cn-%s.aliyuncs.com/topics/%s";
+            this._internalUrl = "";
+            this._pattern = "http://%s.mns.cn-%s%s.aliyuncs.com/topics/%s";
             this._name = name;
             this._account = account;
             if (region)
                 this._region = region;
+            // set internal url
+            this._internalUrl = this._account.isInternal() ? "-internal" : "";
             // make url
             this._urlAttr = this.makeAttrURL();
             this._urlSubscription = this.makeSubscriptionURL();
@@ -872,7 +883,7 @@ var AliMNS;
             return buf.toString('base64');
         };
         Topic.prototype.makeAttrURL = function () {
-            return Util.format(this._pattern, this._account.getAccountId(), this._region, this._name);
+            return Util.format(this._pattern, this._account.getAccountId(), this._region, this._internalUrl, this._name);
         };
         Topic.prototype.makeSubscriptionURL = function () {
             return this.makeAttrURL() + "/subscriptions/";

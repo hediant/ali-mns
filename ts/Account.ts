@@ -3,10 +3,11 @@
 module AliMNS{
     // The Ali account, it holds the key id and secret.
     export class Account{
-        constructor(accountId:string, keyId:string, keySecret:string){
+        constructor(accountId:string, keyId:string, keySecret:string, isInternal?:boolean){
             this._accountId = accountId;
             this._keyId = keyId;
             this._keySecret = keySecret;
+            this._isInternal = isInternal;
         }
 
         public getAccountId(){ return this._accountId; }
@@ -28,9 +29,14 @@ module AliMNS{
             return buf.toString("base64");
         }
 
+        public isInternal(){
+            return this._isInternal;
+        }
+
         private _accountId: string; // Owner id
         private _keyId: string; // Access key id
         private _keySecret: string; // Access key secret
         private _bGoogleAnalytics = true; // Enable Google Analytics
+        private _isInternal = false; // use public url or internal url to access ali-yun
     }
 }
