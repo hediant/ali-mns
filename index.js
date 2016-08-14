@@ -1,4 +1,4 @@
-var gitVersion={"branch":"dev","rev":"107","hash":"011a4c2","hash160":"011a4c283605b3f645af63e9c0cc99c44d606510"};
+var gitVersion={"branch":"develop","rev":"118","hash":"811af87","hash160":"811af87e6b769f50d5e42a021567ee8b87a8c2ef"};
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -50,6 +50,66 @@ var AliMNS;
         return Account;
     }());
     AliMNS.Account = Account;
+})(AliMNS || (AliMNS = {}));
+var AliMNS;
+(function (AliMNS) {
+    var GA = (function () {
+        function GA(accId) {
+            this._bGoogleAnalytics = true;
+            this._rgxAccId = /\/\/\w+\./;
+            this._bAccumulated = false;
+            this._bAccumulatePrefix = "";
+            this._accumutionMax = 100;
+            this._accumulation = {};
+            this._gitMark = gitVersion.branch + "." + gitVersion.rev + "@" + gitVersion.hash;
+            this._visitor = UA("UA-75293894-5", this.u2id(accId));
+        }
+        GA.prototype.send = function (action, value, url) {
+            if (this._bGoogleAnalytics) {
+                if (this._bAccumulated) {
+                    // 累积多个一起发送
+                    this._bAccumulated = false;
+                    var actionPrefixed = this._bAccumulatePrefix + ":" + action;
+                    if (!this._accumulation[actionPrefixed])
+                        this._accumulation[actionPrefixed] = { value: 0, count: 0 };
+                    this._accumulation[actionPrefixed].value += value;
+                    this._accumulation[actionPrefixed].count++;
+                    if (this._accumulation[actionPrefixed].count >= this._accumutionMax) {
+                        this.send(actionPrefixed, this._accumulation[actionPrefixed].value, url);
+                        this._accumulation[actionPrefixed].value = 0;
+                        this._accumulation[actionPrefixed].count = 0;
+                    }
+                }
+                else {
+                    var args = { dl: url.replace(this._rgxAccId, "//0.") };
+                    // catagory, action, label, value, params
+                    this._visitor.event("AliMNS", action, this._gitMark, value, args).send();
+                }
+            }
+        };
+        GA.prototype.accumulateNextSend = function (prefix) {
+            this._bAccumulated = true;
+            this._bAccumulatePrefix = prefix;
+        };
+        GA.prototype.disableGA = function (bDisable) {
+            this._bGoogleAnalytics = (!bDisable);
+        };
+        GA.prototype.u2id = function (uid) {
+            var cryptoMD5 = CryptoA.createHash("md5");
+            var md5HEX = cryptoMD5.update(uid).digest("hex");
+            var uxid = new Array(36);
+            for (var i = 0, j = 0; i < md5HEX.length; i++, j++) {
+                if (i === 8 || i === 12 || i === 16 || i === 20) {
+                    uxid[j] = "-";
+                    j++;
+                }
+                uxid[j] = md5HEX.charAt(i);
+            }
+            return uxid.join("");
+        };
+        return GA;
+    }());
+    AliMNS.GA = GA;
 })(AliMNS || (AliMNS = {}));
 var AliMNS;
 (function (AliMNS) {
@@ -264,6 +324,52 @@ var AliMNS;
     AliMNS.MQS = MNS;
 })(AliMNS || (AliMNS = {}));
 /// <reference path="Interfaces.ts" />
+var AliMNS;
+(function (AliMNS) {
+    var MNSTopic = (function (_super) {
+        __extends(MNSTopic, _super);
+        function MNSTopic(account, region) {
+            _super.call(this, account, region);
+            this._patternTopic = "http://%s.mns.cn-%s.aliyuncs.com/topics/";
+            // make url
+            this._urlTopic = this.makeTopicURL();
+        }
+        // List all topics.
+        MNSTopic.prototype.listTopicP = function (prefix, pageSize, pageMarker) {
+            var headers = {};
+            if (prefix)
+                headers["x-mns-prefix"] = prefix;
+            if (pageMarker)
+                headers["x-mns-marker"] = pageMarker;
+            if (pageSize)
+                headers["x-mns-ret-number"] = pageSize;
+            var url = this._urlTopic.slice(0, -1);
+            debug("GET " + url);
+            return this._openStack.sendP("GET", url, null, headers);
+        };
+        // Create a topic
+        MNSTopic.prototype.createTopicP = function (name, options) {
+            var body = { Topic: "" };
+            if (options)
+                body.Topic = options;
+            var url = Url.resolve(this._urlTopic, name);
+            debug("PUT " + url, body);
+            return this._openStack.sendP("PUT", url, body);
+        };
+        // Delete a topic
+        MNSTopic.prototype.deleteTopicP = function (name) {
+            var url = Url.resolve(this._urlTopic, name);
+            debug("DELETE " + url);
+            return this._openStack.sendP("DELETE", url);
+        };
+        MNSTopic.prototype.makeTopicURL = function () {
+            return Util.format(this._patternTopic, this._account.getAccountId(), this._region);
+        };
+        return MNSTopic;
+    }(AliMNS.MNS));
+    AliMNS.MNSTopic = MNSTopic;
+})(AliMNS || (AliMNS = {}));
+/// <reference path="Interfaces.ts" />
 /// <reference path="ali-mns.ts" />
 var AliMNS;
 (function (AliMNS) {
@@ -329,8 +435,9 @@ var AliMNS;
                     try {
                         debug(dataRecv);
                         _this._timeoutCount = 0;
-                        var doneP = function (ack){
-                            return ack ? _this.deleteP(dataRecv) : Promise.resolve(dataRecv);
+                        var self = _this;
+                        var doneP = function (ack) {
+                            return ack ? self.deleteP(dataRecv) : Promise.resolve(dataRecv);
                         };
                         cb(null, dataRecv, doneP);
                     }
@@ -342,14 +449,14 @@ var AliMNS;
                 }, function (ex) {
                     debug(ex);
                     if ((!ex.Error) || (ex.Error.Code !== "MessageNotExist")) {
-                        cb(ex, null);
+                        cb(ex, null, null);
                     }
                     if (ex) {
                         if (ex.message === "timeout") {
                             _this._timeoutCount++;
                             if (_this._timeoutCount > _this._timeoutMax) {
                                 // 极度可能网络底层断了
-                                cb(new Error("NetworkBroken"), null);
+                                cb(new Error("NetworkBroken"), null, null);
                             }
                         }
                         else if (ex.Error && ex.Error.Code === "MessageNotExist") {
@@ -681,120 +788,6 @@ var AliMNS;
     }(AliMNS.MQ));
     AliMNS.MQBatch = MQBatch;
 })(AliMNS || (AliMNS = {}));
-/// <reference path="ali-mns.ts" />
-/// <reference path="MNS.ts" />
-/// <reference path="Account.ts" />
-/// <reference path="Msg.ts" />
-/// <reference path="MQ.ts" />
-/// <reference path="MQBatch.ts" />
-// Exports the AliMNS
-module.exports = AliMNS;
-var AliMNS;
-(function (AliMNS) {
-    var GA = (function () {
-        function GA(accId) {
-            this._bGoogleAnalytics = true;
-            this._rgxAccId = /\/\/\w+\./;
-            this._bAccumulated = false;
-            this._bAccumulatePrefix = "";
-            this._accumutionMax = 100;
-            this._accumulation = {};
-            this._gitMark = gitVersion.branch + "." + gitVersion.rev + "@" + gitVersion.hash;
-            this._visitor = UA("UA-75293894-5", this.u2id(accId));
-        }
-        GA.prototype.send = function (action, value, url) {
-            if (this._bGoogleAnalytics) {
-                if (this._bAccumulated) {
-                    // 累积多个一起发送
-                    this._bAccumulated = false;
-                    var actionPrefixed = this._bAccumulatePrefix + ":" + action;
-                    if (!this._accumulation[actionPrefixed])
-                        this._accumulation[actionPrefixed] = { value: 0, count: 0 };
-                    this._accumulation[actionPrefixed].value += value;
-                    this._accumulation[actionPrefixed].count++;
-                    if (this._accumulation[actionPrefixed].count >= this._accumutionMax) {
-                        this.send(actionPrefixed, this._accumulation[actionPrefixed].value, url);
-                        this._accumulation[actionPrefixed].value = 0;
-                        this._accumulation[actionPrefixed].count = 0;
-                    }
-                }
-                else {
-                    var args = { dl: url.replace(this._rgxAccId, "//0.") };
-                    // catagory, action, label, value, params
-                    this._visitor.event("AliMNS", action, this._gitMark, value, args).send();
-                }
-            }
-        };
-        GA.prototype.accumulateNextSend = function (prefix) {
-            this._bAccumulated = true;
-            this._bAccumulatePrefix = prefix;
-        };
-        GA.prototype.disableGA = function (bDisable) {
-            this._bGoogleAnalytics = (!bDisable);
-        };
-        GA.prototype.u2id = function (uid) {
-            var cryptoMD5 = CryptoA.createHash("md5");
-            var md5HEX = cryptoMD5.update(uid).digest("hex");
-            var uxid = new Array(36);
-            for (var i = 0, j = 0; i < md5HEX.length; i++, j++) {
-                if (i === 8 || i === 12 || i === 16 || i === 20) {
-                    uxid[j] = "-";
-                    j++;
-                }
-                uxid[j] = md5HEX.charAt(i);
-            }
-            return uxid.join("");
-        };
-        return GA;
-    }());
-    AliMNS.GA = GA;
-})(AliMNS || (AliMNS = {}));
-/// <reference path="Interfaces.ts" />
-var AliMNS;
-(function (AliMNS) {
-    var MNSTopic = (function (_super) {
-        __extends(MNSTopic, _super);
-        function MNSTopic(account, region) {
-            _super.call(this, account, region);
-            this._patternTopic = "http://%s.mns.cn-%s.aliyuncs.com/topics/";
-            // make url
-            this._urlTopic = this.makeTopicURL();
-        }
-        // List all topics.
-        MNSTopic.prototype.listTopicP = function (prefix, pageSize, pageMarker) {
-            var headers = {};
-            if (prefix)
-                headers["x-mns-prefix"] = prefix;
-            if (pageMarker)
-                headers["x-mns-marker"] = pageMarker;
-            if (pageSize)
-                headers["x-mns-ret-number"] = pageSize;
-            var url = this._urlTopic.slice(0, -1);
-            debug("GET " + url);
-            return this._openStack.sendP("GET", url, null, headers);
-        };
-        // Create a topic
-        MNSTopic.prototype.createTopicP = function (name, options) {
-            var body = { Topic: "" };
-            if (options)
-                body.Topic = options;
-            var url = Url.resolve(this._urlTopic, name);
-            debug("PUT " + url, body);
-            return this._openStack.sendP("PUT", url, body);
-        };
-        // Delete a topic
-        MNSTopic.prototype.deleteTopicP = function (name) {
-            var url = Url.resolve(this._urlTopic, name);
-            debug("DELETE " + url);
-            return this._openStack.sendP("DELETE", url);
-        };
-        MNSTopic.prototype.makeTopicURL = function () {
-            return Util.format(this._patternTopic, this._account.getAccountId(), this._region);
-        };
-        return MNSTopic;
-    }(AliMNS.MNS));
-    AliMNS.MNSTopic = MNSTopic;
-})(AliMNS || (AliMNS = {}));
 /// <reference path="Interfaces.ts" />
 /// <reference path="Account.ts" />
 /// <reference path="OpenStack.ts" />
@@ -936,5 +929,13 @@ var AliMNS;
     }());
     AliMNS.Subscription = Subscription;
 })(AliMNS || (AliMNS = {}));
+/// <reference path="ali-mns.ts" />
+/// <reference path="MNS.ts" />
+/// <reference path="Account.ts" />
+/// <reference path="Msg.ts" />
+/// <reference path="MQ.ts" />
+/// <reference path="MQBatch.ts" />
+// Exports the AliMNS
+module.exports = AliMNS;
 
 //# sourceMappingURL=index.js.map
