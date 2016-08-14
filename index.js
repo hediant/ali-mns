@@ -1,4 +1,4 @@
-var gitVersion={"branch":"internal_url_support","rev":"120","hash":"a4ef628","hash160":"a4ef628b991160c4fbd7f69805d8cc4370b40fc8"};
+var gitVersion={"branch":"internal_url_support","rev":"121","hash":"381bba3","hash160":"381bba30e1126818ecc015706004a4c466d94d04"};
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -883,7 +883,7 @@ var AliMNS;
             return buf.toString('base64');
         };
         Topic.prototype.makeAttrURL = function () {
-            return Util.format(this._pattern, this._account.getAccountId(), this._region, this._name);
+            return Util.format(this._pattern, this._account.getAccountId(), this._region, this._internalUrl, this._name);
         };
         Topic.prototype.makeSubscriptionURL = function () {
             return this.makeAttrURL() + "/subscriptions/";

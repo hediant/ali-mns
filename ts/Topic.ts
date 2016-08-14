@@ -88,7 +88,7 @@ module AliMNS{
         }
 
         private makeAttrURL(){
-            return Util.format(this._pattern, this._account.getAccountId(), this._region, this._name);
+            return Util.format(this._pattern, this._account.getAccountId(), this._region, this._internalUrl, this._name);
         }
 
         private makeSubscriptionURL(){
