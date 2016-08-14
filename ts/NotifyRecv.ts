@@ -42,7 +42,7 @@ module AliMNS{
             });
         }
 
-        private notifyRecvInternal(cb:(ex:Error, msg:any)=>Boolean, waitSeconds:number, numOfMessages?:number){
+        private notifyRecvInternal(cb:(ex:Error, msg:any, doneP:Function)=>Boolean, waitSeconds:number, numOfMessages?:number){
             // This signal will be triggered by notifyStopP()
             if(this._signalSTOP){
                 debug("notifyStopped");
@@ -58,12 +58,11 @@ module AliMNS{
                     try {
                         debug(dataRecv);
                         this._timeoutCount = 0;
-                        if (cb(null, dataRecv)) {
-                            this.deleteP(dataRecv)
-                                .done(null, (ex)=> {
-                                    console.log(ex);
-                                });
-                        }
+                        var self = this;
+                        var doneP = function (ack){
+                            return ack ? self.deleteP(dataRecv) : Promise.resolve(dataRecv);
+                        };
+                        cb(null, dataRecv, doneP);
                     }
                     catch (ex) {
                         // ignore any ex throw from cb
@@ -73,7 +72,7 @@ module AliMNS{
                 }, (ex)=> {
                     debug(ex);
                     if ((!ex.Error) || (ex.Error.Code !== "MessageNotExist")) {
-                        cb(ex, null);
+                        cb(ex, null, null);
                     }
 
                     if(ex) {
@@ -81,7 +80,7 @@ module AliMNS{
                             this._timeoutCount++;
                             if (this._timeoutCount > this._timeoutMax) {
                                 // 极度可能网络底层断了
-                                cb(new Error("NetworkBroken"), null);
+                                cb(new Error("NetworkBroken"), null, null);
                             }
                         }
                         else if (ex.Error && ex.Error.Code === "MessageNotExist") {
